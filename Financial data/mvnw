@@ -1,0 +1,62 @@
+#!/bin/sh
+# Apache Maven Wrapper startup script v3.2.0
+set -euf
+
+# resolve script location
+PRG="$0"
+while [ -h "$PRG" ]; do
+  ls=`ls -ld "$PRG"`
+  link=`expr "$ls" : '.*-> \(.*\)$'`
+  if expr "$link" : '/.*' > /dev/null; then
+    PRG="$link"
+  else
+    PRG=`dirname "$PRG"`/`basename "$link"`
+  fi
+done
+BASEDIR=`dirname "$PRG"`
+BASEDIR=`cd "$BASEDIR" && pwd`
+
+WRAPPER_JAR="$BASEDIR/.mvn/wrapper/maven-wrapper.jar"
+WRAPPER_PROPS="$BASEDIR/.mvn/wrapper/maven-wrapper.properties"
+MAVEN_PROJECTBASEDIR=${MAVEN_BASEDIR:-"$BASEDIR"}
+
+# Download wrapper jar if missing
+if [ ! -r "$WRAPPER_JAR" ]; then
+  if [ ! -r "$WRAPPER_PROPS" ]; then
+    echo "Cannot find $WRAPPER_PROPS" >&2
+    exit 1
+  fi
+  url=`grep -E '^wrapperUrl=' "$WRAPPER_PROPS" | cut -d= -f2-`
+  echo "Downloading Maven Wrapper from: $url"
+  mkdir -p "$BASEDIR/.mvn/wrapper"
+  if command -v curl >/dev/null 2>&1; then
+    curl -fsSL "$url" -o "$WRAPPER_JAR"
+  elif command -v wget >/dev/null 2>&1; then
+    wget -q "$url" -O "$WRAPPER_JAR"
+  else
+    echo "Please install curl or wget to download the Maven Wrapper" >&2
+    exit 1
+  fi
+fi
+
+JAVA_HOME=${JAVA_HOME:-}
+if [ -n "$JAVA_HOME" ]; then
+  JAVA_EXE="$JAVA_HOME/bin/java"
+else
+  JAVA_EXE="java"
+fi
+
+if ! command -v "$JAVA_EXE" >/dev/null 2>&1; then
+  echo "Java executable not found. Please install Java 17 or set JAVA_HOME." >&2
+  exit 1
+fi
+
+# Optional JVM config
+WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperMain
+
+exec "$JAVA_EXE" \
+  -Dmaven.multiModuleProjectDirectory="$MAVEN_PROJECTBASEDIR" \
+  -Dmaven.home="$MAVEN_PROJECTBASEDIR" \
+  -Dmaven.multiModuleProjectDirectory="$MAVEN_PROJECTBASEDIR" \
+  -cp "$WRAPPER_JAR" \
+  $WRAPPER_LAUNCHER "$@"

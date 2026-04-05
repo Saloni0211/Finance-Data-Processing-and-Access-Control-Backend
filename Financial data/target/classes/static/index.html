@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finance Dashboard Demo</title>
+  <style>
+    :root { font-family: Inter, system-ui, -apple-system, sans-serif; color: #0f172a; background: #f8fafc; }
+    body { margin: 0; padding: 24px; }
+    h1 { margin: 0 0 12px; }
+    h2 { margin: 0 0 8px; }
+    section { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 16px; box-shadow: 0 6px 18px rgba(15,23,42,0.05); }
+    label { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; color: #64748b; margin-top: 8px; }
+    input, select, textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; }
+    button { margin-top: 10px; padding: 10px 16px; border: none; border-radius: 8px; background: #2563eb; color: #fff; cursor: pointer; font-weight: 600; }
+    button.secondary { background: #0f172a; }
+    button.danger { background: #ef4444; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    pre { background: #0f172a; color: #e2e8f0; padding: 12px; border-radius: 8px; overflow: auto; }
+    a { color: #2563eb; cursor: pointer; text-decoration: none; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <h1>Finance Dashboard Demo</h1>
+  <p id="statusText">Not signed in.</p>
+
+  <!-- Login Screen -->
+  <section id="loginView">
+    <h2>Login</h2>
+    <div class="grid">
+      <div>
+        <label for="loginUser">Username</label>
+        <input id="loginUser" value="admin" />
+      </div>
+      <div>
+        <label for="loginPass">Password</label>
+        <input id="loginPass" type="password" value="admin123" />
+      </div>
+    </div>
+    <button onclick="handleLogin()">Login</button>
+    <p>New here? <a onclick="showRegister()">Register a user</a></p>
+  </section>
+
+  <!-- Register Screen -->
+  <section id="registerView" class="hidden">
+    <h2>Register User (requires admin credentials)</h2>
+    <div class="grid">
+      <div>
+        <label for="regAdminUser">Admin Username</label>
+        <input id="regAdminUser" value="admin" />
+      </div>
+      <div>
+        <label for="regAdminPass">Admin Password</label>
+        <input id="regAdminPass" type="password" value="admin123" />
+      </div>
+      <div>
+        <label for="regUsername">New Username</label>
+        <input id="regUsername" />
+      </div>
+      <div>
+        <label for="regPassword">New Password</label>
+        <input id="regPassword" type="password" />
+      </div>
+      <div>
+        <label for="regRole">Role</label>
+        <select id="regRole">
+          <option value="VIEWER">VIEWER</option>
+          <option value="ANALYST">ANALYST</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+      </div>
+    </div>
+    <button onclick="registerUser()">Create User</button>
+    <button class="secondary" onclick="showLogin()">Back to Login</button>
+    <div id="regMsg"></div>
+  </section>
+
+  <!-- Dashboard Screen -->
+  <section id="dashboardView" class="hidden">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+      <h2 style="margin:0;">Dashboard</h2>
+      <button class="danger" onclick="logout()">Logout</button>
+    </div>
+
+    <section>
+      <h3>Quick Actions</h3>
+      <button onclick="loadSummary()">Load Summary</button>
+      <button class="secondary" onclick="loadRecords()">Load Records</button>
+    </section>
+
+    <section>
+      <h3>Summary</h3>
+      <div id="summaryContent">(click Load Summary)</div>
+    </section>
+
+    <section>
+      <h3>Records</h3>
+      <div class="grid">
+        <div><label for="type">Type</label><select id="type"><option value="">Any</option><option value="INCOME">INCOME</option><option value="EXPENSE">EXPENSE</option></select></div>
+        <div><label for="category">Category</label><input id="category" placeholder="e.g. Groceries" /></div>
+        <div><label for="start">Start Date</label><input id="start" type="date" /></div>
+        <div><label for="end">End Date</label><input id="end" type="date" /></div>
+      </div>
+      <button onclick="loadRecords()">Load Records</button>
+      <div id="recordsList" style="margin-top:12px">(no data)</div>
+    </section>
+
+    <section>
+      <h3>Create Record (Admin)</h3>
+      <div class="grid">
+        <div><label for="crAmount">Amount</label><input id="crAmount" type="number" step="0.01" /></div>
+        <div><label for="crType">Type</label><select id="crType"><option value="INCOME">INCOME</option><option value="EXPENSE">EXPENSE</option></select></div>
+        <div><label for="crCategory">Category</label><input id="crCategory" /></div>
+        <div><label for="crDate">Date</label><input id="crDate" type="date" /></div>
+      </div>
+      <label for="crNotes">Notes</label>
+      <textarea id="crNotes" rows="2"></textarea>
+      <button onclick="createRecord()">Create</button>
+      <div id="createMsg"></div>
+    </section>
+
+    <section>
+      <h3>Delete Record (Admin)</h3>
+      <label for="delId">Record ID</label>
+      <input id="delId" type="number" />
+      <button onclick="deleteRecord()">Delete</button>
+      <div id="deleteMsg"></div>
+    </section>
+
+    <section>
+      <h3>Reset Password (Admin)</h3>
+      <div class="grid">
+        <div><label for="resetUserId">User ID</label><input id="resetUserId" type="number" /></div>
+        <div><label for="resetNewPass">New Password</label><input id="resetNewPass" type="password" /></div>
+      </div>
+      <button onclick="resetPassword()">Set New Password</button>
+      <button class="secondary" onclick="loadUsers()">List Users (IDs)</button>
+      <div id="resetMsg"></div>
+      <div id="usersList" style="margin-top:10px"></div>
+    </section>
+
+    <section>
+      <h3>Users (Admin)</h3>
+      <button onclick="loadUsers()">Refresh Users</button>
+      <div id="usersTable" style="margin-top:10px">(click Refresh Users)</div>
+      <div class="grid" style="margin-top:12px;">
+        <div><label for="updUserId">User ID</label><input id="updUserId" type="number" /></div>
+        <div><label for="updRole">Role</label>
+          <select id="updRole">
+            <option value="">(leave unchanged)</option>
+            <option value="VIEWER">VIEWER</option>
+            <option value="ANALYST">ANALYST</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+        <div><label for="updStatus">Status</label>
+          <select id="updStatus">
+            <option value="">(leave unchanged)</option>
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="INACTIVE">INACTIVE</option>
+          </select>
+        </div>
+        <div><label for="updPass">New Password</label><input id="updPass" type="password" placeholder="optional" /></div>
+      </div>
+      <button onclick="updateUser()">Update User</button>
+      <div id="updateMsg"></div>
+    </section>
+
+    <section>
+      <h3>Last API Response</h3>
+      <pre id="lastResponse">(none yet)</pre>
+    </section>
+  </section>
+
+<script>
+  const API = '';
+  let currentUser = null; // {u,p}
+
+  const summaryDiv = () => document.getElementById('summaryContent');
+  const recordsDiv = () => document.getElementById('recordsList');
+  const lastResponse = () => document.getElementById('lastResponse');
+  const statusText = () => document.getElementById('statusText');
+
+  function showLogin() {
+    document.getElementById('loginView').classList.remove('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('dashboardView').classList.add('hidden');
+    statusText().textContent = 'Not signed in.';
+  }
+
+  function showRegister() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.remove('hidden');
+    document.getElementById('dashboardView').classList.add('hidden');
+    statusText().textContent = 'Register a user (admin creds required).';
+  }
+
+  function showDashboard() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('dashboardView').classList.remove('hidden');
+    statusText().textContent = `Signed in as ${currentUser?.u || ''}`;
+  }
+
+  function authHeader() {
+    if (!currentUser) return {};
+    const token = btoa(`${currentUser.u}:${currentUser.p}`);
+    return { 'Authorization': `Basic ${token}`, 'Content-Type': 'application/json' };
+  }
+
+  function adminHeaderInline(u, p) {
+    const token = btoa(`${u}:${p}`);
+    return { 'Authorization': `Basic ${token}`, 'Content-Type': 'application/json' };
+  }
+
+  async function handleLogin() {
+    const u = document.getElementById('loginUser').value;
+    const p = document.getElementById('loginPass').value;
+    currentUser = { u, p };
+    try {
+      const res = await fetch(`${API}/dashboard/summary`, { headers: authHeader() });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Login failed');
+      showDashboard();
+      summaryDiv().textContent = '(click Load Summary)';
+      recordsDiv().textContent = '(no data)';
+    } catch (e) {
+      document.getElementById('statusText').textContent = e.message;
+      currentUser = null;
+    }
+  }
+
+  function logout() {
+    currentUser = null;
+    showLogin();
+    summaryDiv().textContent = '(logged out)';
+    recordsDiv().textContent = '(logged out)';
+    lastResponse().textContent = '(cleared)';
+  }
+
+  async function loadSummary() {
+    try {
+      const res = await fetch(`${API}/dashboard/summary`, { headers: authHeader() });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Failed');
+      summaryDiv().innerHTML = `
+        <div class="grid">
+          <div><strong>Total Income:</strong> ${data.totalIncome}</div>
+          <div><strong>Total Expense:</strong> ${data.totalExpense}</div>
+          <div><strong>Net:</strong> ${data.netBalance}</div>
+        </div>
+        <h4>Income by Category</h4><pre>${JSON.stringify(data.incomeByCategory, null, 2)}</pre>
+        <h4>Expense by Category</h4><pre>${JSON.stringify(data.expenseByCategory, null, 2)}</pre>
+        <h4>Monthly Trend</h4><pre>${JSON.stringify(data.monthlyTrend, null, 2)}</pre>
+        <h4>Recent Activity</h4><pre>${JSON.stringify(data.recentActivity, null, 2)}</pre>
+      `;
+    } catch (e) {
+      summaryDiv().textContent = e.message;
+    }
+  }
+
+  async function loadRecords() {
+    const params = new URLSearchParams();
+    const type = document.getElementById('type').value;
+    const category = document.getElementById('category').value;
+    const start = document.getElementById('start').value;
+    const end = document.getElementById('end').value;
+    if (type) params.append('type', type);
+    if (category) params.append('category', category);
+    if (start) params.append('startDate', start);
+    if (end) params.append('endDate', end);
+    try {
+      const res = await fetch(`${API}/records?${params.toString()}`, { headers: authHeader() });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Failed');
+      if (!data.length) { recordsDiv().textContent = 'No records found'; return; }
+      recordsDiv().innerHTML = data.map(r => `
+        <div style="padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;">
+          <strong>#${r.id}</strong> ${r.type} <span class="tag">${r.category}</span> — ${r.amount} on ${r.date}<br/>
+          ${r.notes || ''} <em>by ${r.createdBy || 'N/A'}</em>
+        </div>`).join('');
+    } catch (e) {
+      recordsDiv().textContent = e.message;
+    }
+  }
+
+  async function createRecord() {
+    const payload = {
+      amount: parseFloat(document.getElementById('crAmount').value || '0'),
+      type: document.getElementById('crType').value,
+      category: document.getElementById('crCategory').value,
+      date: document.getElementById('crDate').value,
+      notes: document.getElementById('crNotes').value
+    };
+    const msg = document.getElementById('createMsg');
+    try {
+      const res = await fetch(`${API}/records`, {
+        method: 'POST',
+        headers: authHeader(),
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Failed (admin only)');
+      msg.textContent = `Created record #${data.id}`;
+      loadRecords();
+      loadSummary();
+    } catch (e) {
+      msg.textContent = e.message;
+    }
+  }
+
+  async function deleteRecord() {
+    const id = document.getElementById('delId').value;
+    const msg = document.getElementById('deleteMsg');
+    if (!id) { msg.textContent = 'Enter an ID'; return; }
+    try {
+      const res = await fetch(`${API}/records/${id}`, { method: 'DELETE', headers: authHeader() });
+      showLast(res, await res.text());
+      if (!res.ok) throw new Error('Delete failed (admin only)');
+      msg.textContent = `Deleted record #${id}`;
+      loadRecords();
+      loadSummary();
+    } catch (e) {
+      msg.textContent = e.message;
+    }
+  }
+
+  async function registerUser() {
+    const msg = document.getElementById('regMsg');
+    const payload = {
+      username: document.getElementById('regUsername').value,
+      password: document.getElementById('regPassword').value,
+      role: document.getElementById('regRole').value,
+      status: 'ACTIVE'
+    };
+    const adminU = document.getElementById('regAdminUser').value;
+    const adminP = document.getElementById('regAdminPass').value;
+    try {
+      const res = await fetch(`${API}/users`, {
+        method: 'POST',
+        headers: adminHeaderInline(adminU, adminP),
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Register failed (admin only)');
+      msg.textContent = `Created user #${data.id} (${data.username})`;
+    } catch (e) {
+      msg.textContent = e.message;
+    }
+  }
+
+  async function loadUsers() {
+    const msg = document.getElementById('usersList');
+    const table = document.getElementById('usersTable');
+    try {
+      const res = await fetch(`${API}/users`, { headers: authHeader() });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'List users failed (admin only)');
+      msg.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      table.innerHTML = data.map(u => `
+        <div style="padding:8px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:6px;">
+          <strong>#${u.id}</strong> ${u.username} — ${u.role} — ${u.status} — created ${u.createdAt}
+        </div>`).join('');
+    } catch (e) {
+      msg.textContent = e.message;
+      table.textContent = e.message;
+    }
+  }
+
+  async function resetPassword() {
+    const msg = document.getElementById('resetMsg');
+    const id = document.getElementById('resetUserId').value;
+    const newPass = document.getElementById('resetNewPass').value;
+    if (!id || !newPass) { msg.textContent = 'Enter user ID and new password'; return; }
+    const payload = { password: newPass };
+    try {
+      const res = await fetch(`${API}/users/${id}`, {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Reset failed (admin only)');
+      msg.textContent = `Password reset for user #${id}`;
+    } catch (e) {
+      msg.textContent = e.message;
+    }
+  }
+
+  async function updateUser() {
+    const msg = document.getElementById('updateMsg');
+    const id = document.getElementById('updUserId').value;
+    if (!id) { msg.textContent = 'Enter user ID'; return; }
+    const payload = {};
+    const role = document.getElementById('updRole').value;
+    const status = document.getElementById('updStatus').value;
+    const pwd = document.getElementById('updPass').value;
+    if (role) payload.role = role;
+    if (status) payload.status = status;
+    if (pwd) payload.password = pwd;
+    if (Object.keys(payload).length === 0) { msg.textContent = 'Nothing to update'; return; }
+    try {
+      const res = await fetch(`${API}/users/${id}`, {
+        method: 'PUT',
+        headers: authHeader(),
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      showLast(res, data);
+      if (!res.ok) throw new Error(data.message || 'Update failed (admin only)');
+      msg.textContent = `Updated user #${id}`;
+      loadUsers();
+    } catch (e) {
+      msg.textContent = e.message;
+    }
+  }
+
+  function showLast(res, data) {
+    lastResponse().textContent = `${res.status} ${res.statusText}\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`;
+  }
+
+  // start on login
+  showLogin();
+</script>
+</body>
+</html>
